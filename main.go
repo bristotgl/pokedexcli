@@ -1,5 +1,8 @@
-package pokedexcli
+package main
 
 func main() {
 	println("Hello, World!")
 }
+
+
+
