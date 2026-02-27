@@ -1,33 +1,37 @@
 package repl
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestCleanInput(t *testing.T) {
-	cases := []struct {
-		input	string
+	cases := map[string]struct {
+		input    string
 		expected []string
-	} {
-		{
-			input: " hello world ",
-			expected: []string{"hello", "world"},
-		},
-		{
-			input: "hello\tworld",
-			expected: []string{"hello", "world"},
-		},
-		{
-			input: "HELLO World",
-			expected: []string{"hello", "world"},
-		},
+	}{
+		"empty input":     {input: "", expected: []string{}},
+		"clean input":     {input: "hello world", expected: []string{"hello", "world"}},
+		"trailing spaces": {input: " hello world ", expected: []string{"hello", "world"}},
+		"table spacing":   {input: "hello\tworld", expected: []string{"hello", "world"}},
+		"new line":        {input: "\nhello\nworld\n", expected: []string{"hello", "world"}},
+		"uppercase word":  {input: "HELLO World", expected: []string{"hello", "world"}},
 	}
 
-	for _, c := range cases {
-		actual := cleanInput(c.input)
-		
-		if len(actual) != len(c.expected) {
-			t.Errorf("slices of different sizes!")
-		}
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			actual := cleanInput(c.input)
+			if len(c.expected) != len(actual) {
+				t.Errorf("lenghts don't match: got %#v but want %#v", actual, c.expected)
+				return
+			}
 
-		// continue...
+			for i := range actual {
+				actualWord := actual[i]
+				expectedWord := c.expected[i]
+				if actualWord != expectedWord {
+					t.Errorf("cleanInput(%#v) == %#v, expected: %#v", c.input, actual, c.expected)
+				}
+			}
+		})
 	}
 }
