@@ -39,7 +39,11 @@ func TestAddGet(t *testing.T) {
 			}
 
 			if !slices.Equal(cachedVal, c.val) {
-				t.Errorf("Expected cached value '%v' to be equal to input '%v'", string(cachedVal), string(c.val))
+				t.Errorf(
+					"Expected cached value '%v' to be equal to input '%v'",
+					string(cachedVal),
+					string(c.val),
+				)
 			}
 		})
 	}

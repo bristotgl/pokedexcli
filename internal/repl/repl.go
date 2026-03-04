@@ -7,14 +7,12 @@ import (
 	"strings"
 
 	"github.com/bristotgl/pokedexcli/internal/pokeapi"
-	"github.com/bristotgl/pokedexcli/internal/pokecache"
 )
 
 type Config struct {
 	nextLocationsURL     *string
 	previousLocationsURL *string
 	PokeClient           pokeapi.Client
-	PokeCache            *pokecache.Cache
 }
 
 func StartRepl(cfg *Config) {
@@ -22,6 +20,7 @@ func StartRepl(cfg *Config) {
 	for {
 		fmt.Print("\nPokedex > ")
 		scanner.Scan()
+		fmt.Println()
 
 		if scanner.Err() != nil {
 			os.Exit(1)
@@ -32,13 +31,15 @@ func StartRepl(cfg *Config) {
 			continue
 		}
 
-		command, exists := getCommands()[words[0]]
+		commandName := words[0]
+		command, exists := getCommands()[commandName]
 		if !exists {
 			fmt.Println("Unknown command")
 			continue
 		}
 
-		if err := command.callback(cfg); err != nil {
+		args := words[1:]
+		if err := command.callback(cfg, args...); err != nil {
 			fmt.Println(err)
 		}
 	}
@@ -47,7 +48,7 @@ func StartRepl(cfg *Config) {
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(cfg *Config) error
+	callback    func(cfg *Config, args ...string) error
 }
 
 func cleanInput(text string) []string {
@@ -70,13 +71,18 @@ func getCommands() map[string]cliCommand {
 		},
 		"map": {
 			name:        "map",
-			description: "Displays the names of the next 20 locations",
+			description: "Get the next page of locations",
 			callback:    commandMap,
 		},
 		"mapb": {
 			name:        "mapb",
-			description: "Displays the names of the previous 20 locations",
+			description: "Get the previous page of locations",
 			callback:    commandMapb,
+		},
+		"explore": {
+			name:        "explore <location_name>",
+			description: "Explore a location",
+			callback:    commandExplore,
 		},
 	}
 }

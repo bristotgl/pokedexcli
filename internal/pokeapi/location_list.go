@@ -1,23 +1,20 @@
 package pokeapi
 
 import (
-	"bytes"
-	"encoding/gob"
 	"encoding/json"
 	"net/http"
 
-	"github.com/bristotgl/pokedexcli/internal/pokecache"
+	"github.com/bristotgl/pokedexcli/internal/converter"
 )
 
-func (c *Client) ListLocations(pageURL *string, pokeCache *pokecache.Cache) (LocationsPage, error) {
+func (c *Client) ListLocations(pageURL *string) (LocationsPage, error) {
 	url := baseURL + "/location-area"
 	if pageURL != nil {
 		url = *pageURL
 	}
 
-	cachedPageBytes, exists := pokeCache.Get(url)
-	if exists {
-		return convertBytesToPage(cachedPageBytes)
+	if cachedPageBytes, ok := c.cache.Get(url); ok {
+		return converter.FromBytes[LocationsPage](cachedPageBytes)
 	}
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -37,33 +34,11 @@ func (c *Client) ListLocations(pageURL *string, pokeCache *pokecache.Cache) (Loc
 		return LocationsPage{}, err
 	}
 
-	pageBytes, err := convertPageToBytes(locationsPage)
+	pageBytes, err := converter.ToBytes(locationsPage)
 	if err != nil {
 		return LocationsPage{}, err
 	}
-	pokeCache.Add(url, pageBytes)
+	c.cache.Add(url, pageBytes)
 
 	return locationsPage, nil
-}
-
-func convertBytesToPage(cachedPageBytes []byte) (LocationsPage, error) {
-	var cachedPage LocationsPage
-
-	decoder := gob.NewDecoder(bytes.NewReader(cachedPageBytes))
-	if err := decoder.Decode(&cachedPage); err != nil {
-		return LocationsPage{}, err
-	}
-
-	return cachedPage, nil
-}
-
-func convertPageToBytes(locationsPage LocationsPage) ([]byte, error) {
-	var buf bytes.Buffer
-
-	encoder := gob.NewEncoder(&buf)
-	if err := encoder.Encode(locationsPage); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
 }
