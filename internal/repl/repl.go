@@ -13,6 +13,7 @@ type Config struct {
 	nextLocationsURL     *string
 	previousLocationsURL *string
 	PokeClient           pokeapi.Client
+	CaughtPokemon        map[string]pokeapi.Pokemon
 }
 
 func StartRepl(cfg *Config) {
@@ -20,7 +21,6 @@ func StartRepl(cfg *Config) {
 	for {
 		fmt.Print("\nPokedex > ")
 		scanner.Scan()
-		fmt.Println()
 
 		if scanner.Err() != nil {
 			os.Exit(1)
@@ -83,6 +83,11 @@ func getCommands() map[string]cliCommand {
 			name:        "explore <location_name>",
 			description: "Explore a location",
 			callback:    commandExplore,
+		},
+		"catch": {
+			name:        "catch <pokemon_name>",
+			description: "Attempts to catch a pokemon",
+			callback:    commandCatch,
 		},
 	}
 }
